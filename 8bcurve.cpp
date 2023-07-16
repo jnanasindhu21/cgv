@@ -1,123 +1,132 @@
-// Bezier Curve
-#include<stdlib.h>
-#include<math.h>
 #include<GL/glut.h>
-
-#define PI 3.1416
-GLsizei winWidth = 600, winHeight = 600;
-GLfloat xwcMin = 0.0, xwcMax = 130.0;
-GLfloat ywcMin = 0.0, ywcMax = 130.0;
-typedef struct wcPt3D
+#include<stdio.h>
+#include<math.h>
+float theta = 0, a = 3.14 / 180, r1 = 1, g1 = .5, b1 = 0, r2 = 1, g2 = 1, b2 = 1, r3 = 0, g3 = 1, b3 = 0;
+struct point
 {
 	GLfloat x, y, z;
 };
-void bino(GLint n, GLint* C)
+void bino(int n, int* C)
 {
-	GLint k, j;
-	for (k = 0; k <= n; k++)
+	int k, j;
+	for (k = 0;k <= n;k++)
 	{
 		C[k] = 1;
-		for (j = n; j >= k + 1; j--)
-			C[k] *= j;
-		for (j = n - k; j >= 2; j--)
-			C[k] /= j;
+		for (j = n;j >= k + 1;j--)	C[k] *= j;
+		for (j = n - k;j >= 2;j--)	C[k] /= j;
 	}
 }
-void computeBezPt(GLfloat u, wcPt3D* bezPt, GLint nCtrlPts,	wcPt3D* ctrlPts, GLint* C)
+void cmpt(float u, point* pt1, int cPt, point* pt2, int* C)
 {
-	GLint k, n = nCtrlPts - 1;
-	GLfloat bezBlendFcn;
-	bezPt->x = bezPt->y = bezPt->z = 0.0;
-	for (k = 0; k < nCtrlPts; k++)
+	int k, n = cPt - 1;
+	float bFcn;
+	pt1->x = pt1->y = pt1->z = 0;
+	for (k = 0;k < cPt;k++)
 	{
-		bezBlendFcn = C[k] * pow(u, k) * pow(1 - u, n - k);
-		bezPt->x += ctrlPts[k].x * bezBlendFcn;
-		bezPt->y += ctrlPts[k].y * bezBlendFcn;
-		bezPt->z += ctrlPts[k].z * bezBlendFcn;
+		bFcn = C[k] * pow(u, k) * pow(1 - u, n - k);
+		pt1->x += pt2[k].x * bFcn;
+		pt1->y += pt2[k].y * bFcn;
+		pt1->z += pt2[k].z * bFcn;
 	}
 }
-void bezier(wcPt3D* ctrlPts, GLint nCtrlPts, GLint
-	nBezCurvePts)
+void bez(point* pt1, int cPt, int bPt)
 {
-	wcPt3D bezCurvePt;
-	GLfloat u;
-	GLint* C, k;
-	C = new GLint[nCtrlPts];
-	bino(nCtrlPts - 1, C);
+	point bcPt;
+	float u;
+	int* C, k;
+	C = new int[cPt];
+	bino(cPt - 1, C);
 	glBegin(GL_LINE_STRIP);
-	for (k = 0; k <= nBezCurvePts; k++)
+	for (k = 0;k <= bPt;k++)
 	{
-		u = GLfloat(k) / GLfloat(nBezCurvePts);
-		computeBezPt(u, &bezCurvePt, nCtrlPts, ctrlPts, C);
-		glVertex2f(bezCurvePt.x, bezCurvePt.y);
+		u = float(k) / float(bPt);
+		cmpt(u, &bcPt, cPt, pt1, C);
+		glVertex2f(bcPt.x, bcPt.y);
 	}
 	glEnd();
 	delete[]C;
 }
-void displayFcn()
+void display()
 {
-	GLint nCtrlPts = 4, nBezCurvePts = 20;
-	static float theta = 0;
-	wcPt3D ctrlPts[4] = {{20, 100, 0},{30, 110, 0},{50, 90, 0},	{60, 100, 0} };
-	ctrlPts[1].x += 10 * sin(theta * PI / 180.0);
-	ctrlPts[1].y += 5 * sin(theta * PI / 180.0);
-	ctrlPts[2].x -= 10 * sin((theta + 30) * PI / 180.0);
-	ctrlPts[2].y -= 10 * sin((theta + 30) * PI / 180.0);
-	ctrlPts[3].x -= 4 * sin((theta)*PI / 180.0);
-	ctrlPts[3].y += sin((theta - 30) * PI / 180.0);
-	theta += 0.1;
 	glClear(GL_COLOR_BUFFER_BIT);
-	glPointSize(5);
+	int nCtrlPts = 4, nBCPts = 20;
+	point ctrlPts[4] = { {100,400,0},{150,450,0},{250,350,0},{300,400,0} };
+	ctrlPts[1].x += 50 * sin(theta * a);
+	ctrlPts[1].y += 25 * sin(theta * a);
+	ctrlPts[2].x -= 50 * sin((theta + 30) * a);
+	ctrlPts[2].y -= 50 * sin((theta + 30) * a);
+	ctrlPts[3].x -= 25 * sin((theta)*a);
+	ctrlPts[3].y += sin((theta - 30) * a);
+	theta += 0.2;
+	glColor3f(1, 1, 1);
 	glPushMatrix();
-	for (int i = 0; i < 24; i++)
+	glLineWidth(5);
+	glColor3f(r1, g1, b1);
+	for (int i = 0;i < 50;i++)
 	{
 		glTranslatef(0, -0.8, 0);
-		bezier(ctrlPts, nCtrlPts, nBezCurvePts);
+		bez(ctrlPts, nCtrlPts, nBCPts);
+	}
+	glColor3f(r2, g2, b2);
+	for (int i = 0;i < 50;i++)
+	{
+		glTranslatef(0, -0.8, 0);
+		bez(ctrlPts, nCtrlPts, nBCPts);
+	}
+	glColor3f(r3, g3, b3);
+	for (int i = 0;i < 50;i++)
+	{
+		glTranslatef(0, -0.8, 0);
+		bez(ctrlPts, nCtrlPts, nBCPts);
 	}
 	glPopMatrix();
+	glColor3f(0.7, 0.5, 0.3);
 	glLineWidth(5);
 	glBegin(GL_LINES);
-	glVertex2f(20, 100);
-	glVertex2f(20, 40);
+	glVertex2f(100, 400);
+	glVertex2f(100, 40);
 	glEnd();
-	glFlush();
 	glutPostRedisplay();
 	glutSwapBuffers();
 }
-void winReshapeFun(GLint newWidth, GLint newHeight)
+void keyboard(unsigned char keys, int x4, int y4)
 {
-	glViewport(0, 0, newWidth, newHeight);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluOrtho2D(xwcMin, xwcMax, ywcMin, ywcMax);
-	glClear(GL_COLOR_BUFFER_BIT);
-}
-void d_menu(int op)
-{
-	if (op == 1)
-		glColor3f(1.0, 0.0, 0.0);
-	else if (op == 2)
-		glColor3f(0.0, 1.0, 0.0);
-	else if (op == 3)
-		glColor3f(0.0, 0.0, 1.0);
-	else if (op == 4)
+	switch (keys)
+	{
+	case 'a':
+	case 'A':
+		r1 = rand() * rand() % 10;
+		g1 = rand() * rand() % 10;
+		b1 = rand() * rand() % 10;
+		r2 = rand() * rand() % 10;
+		g2 = rand() * rand() % 10;
+		b2 = rand() * rand() % 10;
+		r3 = rand() * rand() % 10;
+		g3 = rand() * rand() % 10;
+		b3 = rand() * rand() % 10;
+		break;
+	case 27:
 		exit(0);
+		break;
+	}
 	glutPostRedisplay();
 }
-void main(int argc, char** argv)
+void dropmenu(int keys)
 {
+	keyboard((unsigned char)keys, 0, 0);
+}
+int main(int argc, char** argv)
+{
+	printf("\nPress \'a or A\' to randomize the flag color\nPress Esc to quit\n");
+	getc(stdin);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-	glutInitWindowPosition(50, 50);
-	glutInitWindowSize(winWidth, winHeight);
-	glutCreateWindow("Bezier Curve");
-	glutCreateMenu(d_menu);
-	glutAddMenuEntry("Red", 1);
-	glutAddMenuEntry("Green", 2);
-	glutAddMenuEntry("Blue", 3);
-	glutAddMenuEntry("Quit", 4);
-	glutAttachMenu(GLUT_RIGHT_BUTTON);
-	glutDisplayFunc(displayFcn);
-	glutReshapeFunc(winReshapeFun);
+	glutInitWindowSize(1920, 1000);
+	glutCreateWindow("Bezier curve");
+	glMatrixMode(GL_PROJECTION);
+	gluOrtho2D(0, 500, 0, 500);
+	glClearColor(.8, .8, .8, 1);
+	glutDisplayFunc(display);
+	glutKeyboardFunc(keyboard);
 	glutMainLoop();
 }
